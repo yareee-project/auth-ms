@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - '5432:5432'
+    networks:
+      - app-network
+
+  app:
+    depends_on:
+      - db
+    build:
+      context: .
+      target: app
+      args:
+        NPM_TOKEN: ${NPM_TOKEN}
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      NODE_ENV: ${NODE_ENV}
+    ports:
+      - '3001:3000'
+    networks:
+      - app-network
+
+  test:
+    depends_on:
+      - app
+    build:
+      context: .
+      target: test
+      args:
+        NPM_TOKEN: ${NPM_TOKEN}
+    environment:
+      BASE_URL: ${BASE_URL}
+    networks:
+      - app-network
+
+networks:
+  app-network:
